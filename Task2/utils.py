@@ -20,7 +20,7 @@ def clean(sentence, stopword_english= stopword_english):
     sentence = [x for x in sentence if x not in punc] #Removes punc and seperates words
     return " ".join(sentence)
 
-def get_clean_data(sentences):
+def get_clean_data(sentences, clean_data = True):
     labels = []
     clean_sentences = []
     for line in sentences:
@@ -30,9 +30,10 @@ def get_clean_data(sentences):
             continue
         label = a[0]
         sentence = a[1]
-        sent= clean(sentence)
+        if clean_data:
+            sentence= clean(sentence)
         labels.append(label)
-        clean_sentences.append(sent)
+        clean_sentences.append(sentence)
     return clean_sentences, labels
 
 
