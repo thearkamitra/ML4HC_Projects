@@ -24,17 +24,20 @@ import random
 import os
 import os.path
 import numpy as np
+import string
 stopword_english = list(stopwords.words("english"))
-def clean(sentence, stopword_english= stopword_english):
+def clean(sentence, stopword_english= stopword_english, join_sentence=True):
     sentence = sentence.lower()
 #     sentence = re.sub(r'[^\w\s]',"",sentence) ##Removes punc from within words
     words = wordpunct_tokenize(sentence)
-    punc = '''!()-[]{};:'"\,<>./?@#$%^&*_~'''
+    punc = string.punctuation
     sentence = [x for x in words if x not in stopword_english]
     sentence = [x for x in sentence if x not in punc] #Removes punc and seperates words
-    return " ".join(sentence)
+    if join_sentence:
+        return " ".join(sentence)
+    return sentence
 
-def get_clean_data(sentences, clean_data = True):
+def get_clean_data(sentences, clean_data = True, join_sentence=True):
     labels = []
     clean_sentences = []
     for line in sentences:
@@ -45,7 +48,7 @@ def get_clean_data(sentences, clean_data = True):
         label = a[0]
         sentence = a[1]
         if clean_data:
-            sentence= clean(sentence)
+            sentence= clean(sentence, join_sentence= join_sentence)
         labels.append(label)
         clean_sentences.append(sentence)
     return clean_sentences, labels
@@ -101,13 +104,13 @@ def get_score(model, file_path, X, Y,  X_dev, Y_dev, X_test, Y_test, counts = No
             aug = generator(X,Y,64)
             model.fit(aug, epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,), class_weight = counts)
         else:
-            model.fit(aug, epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,), class_weight = counts)
+            model.fit(X, Y , epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,), class_weight = counts)
     else:
         if use_gen:
             aug = generator(X,Y,64)
             model.fit(aug, epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,),)
         else:
-            model.fit(X,Y, epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,),)
+            model.fit(X, Y, epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,),)
     model.load_weights(file_path)
     pred_test = model.predict(X_test)
     pred_test = np.argmax(pred_test, axis=-1)
@@ -119,7 +122,18 @@ def get_score(model, file_path, X, Y,  X_dev, Y_dev, X_test, Y_test, counts = No
         f.write(f"acc= {acc}; f1 = {f1}\n")
     
 def get_sent_emb(data, model):
-    pass
+    sent_embs = []
+    for sent in data:
+        sent_emb = []
+        for word in sent:
+            try:
+                sent_emb.append(model.wv[word])
+            except:
+                pass
+        sent_emb = np.asarray(sent_emb)
+        sent_emb = np.mean(sent_emb,axis =0)
+        sent_embs.append(sent_emb)
+    return sent_embs
 
 
 def flat_accuracy(preds, labels):
