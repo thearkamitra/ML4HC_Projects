@@ -1,3 +1,4 @@
+from copyreg import pickle
 import nltk
 from nltk.corpus import stopwords
 from nltk import wordpunct_tokenize
@@ -8,8 +9,12 @@ from sklearn.naive_bayes import MultinomialNB
 from utils import *
 from model_arch import baseline
 from sklearn import metrics
-classifier = "bayes"
-vectorizer = TfidfVectorizer(max_features = 200)
+classifier = "keras"
+if classifier=="keras":
+    vectorizer = TfidfVectorizer(max_features = 2000)
+else:
+    vectorizer = TfidfVectorizer(max_features = 20000)
+
 naive_bayes_classifier = MultinomialNB()
 data_train, data_dev, data_test = get_data()
 if classifier=="bayes":
@@ -32,17 +37,23 @@ Y_train_num = numerize(Y_train, diction)
 Y_dev_num = numerize(Y_dev, diction)
 Y_test_num = numerize(Y_test, diction)
 
+print("Data has been numerized.")
 
 
 if classifier =="keras":
-    pdb.set_trace()
+
     model = baseline(nclass = len(diction), shape = X_train_tf_idf.shape[-1])
     print(X_train_tf_idf.shape)
     print(counts)
-    file_path = "model_weights/task1_weights.h5"
+    file_path = "model_weights/task1_weights_keras.h5"
+    X_train_tf_idf = convert_sparse_matrix_to_sparse_tensor(X_train_tf_idf)
+    X_test_tf_idf = convert_sparse_matrix_to_sparse_tensor(X_test_tf_idf)
+    X_dev_tf_idf = convert_sparse_matrix_to_sparse_tensor(X_dev_tf_idf)
     get_score(model, file_path, X_train_tf_idf, Y_train_num, X_dev_tf_idf, Y_dev_num, X_test_tf_idf, Y_test_num)
 elif classifier =="bayes":
     naive_bayes_classifier.fit(X_train_tf_idf, Y_train_num)
     y_pred = naive_bayes_classifier.predict(X_test_tf_idf)
-    f1_score = metrics.f1_score(Y_train_num, y_pred, average="weighted")
+    f1_score = metrics.f1_score(Y_test_num, y_pred, average="weighted")
     print(f1_score)
+    with open("model_weights/task1_weights_bayes.pkl","wb") as f:
+        pickle.dump(naive_bayes_classifier, f)

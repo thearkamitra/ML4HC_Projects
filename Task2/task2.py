@@ -22,12 +22,10 @@ Y_train_num = numerize(Y_train, diction)
 Y_dev_num = numerize(Y_dev, diction)
 Y_test_num = numerize(Y_test, diction)
 
-pdb.set_trace()
-
 X_train_vec = get_sent_emb(X_train, model_word2vec)
 X_dev_vec = get_sent_emb(X_dev, model_word2vec)
 X_test_vec = get_sent_emb(X_test, model_word2vec)
 
 model = baseline(nclass = len(diction), shape = vector_size)
-file_path = "model_weights/task2_weights.h5"
+file_path = "model_weights/task2_weights_keras.h5"
 get_score(model, file_path, X_train_vec, Y_train_num, X_dev_vec, Y_dev_num, X_test_vec, Y_test_num, counts= counts, use_gen=False)

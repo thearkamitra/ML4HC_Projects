@@ -16,6 +16,7 @@ from transformers import BertTokenizer, BertForSequenceClassification, AdamW, Be
 from transformers import DistilBertModel, DistilBertConfig
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import numpy as np
+import tensorflow as tf
 import torch
 import torch.nn as nn
 import time
@@ -92,6 +93,10 @@ def generator(X, Y, BS= 64):
         yield np.array(X_batch), Y_batch
         if (count>number_of_batches):
             count =0
+def convert_sparse_matrix_to_sparse_tensor(X):
+    coo = X.tocoo()
+    indices = np.mat([coo.row, coo.col]).transpose()
+    return tf.sparse.reorder(tf.SparseTensor(indices, coo.data, coo.shape))
 def get_score(model, file_path, X, Y,  X_dev, Y_dev, X_test, Y_test, counts = None, use_gen = True):
 
     checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
@@ -101,16 +106,16 @@ def get_score(model, file_path, X, Y,  X_dev, Y_dev, X_test, Y_test, counts = No
     callbacks_list = [checkpoint, early, redonplat,csvlogger]  # early
     if counts != None:
         if use_gen:
-            aug = generator(X,Y,64)
-            model.fit(aug, epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,), class_weight = counts)
+            aug = generator(X,Y,200)
+            model.fit(aug, epochs=1000, verbose=1, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,), class_weight = counts)
         else:
-            model.fit(X, Y , epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,), class_weight = counts)
+            model.fit(X, Y , epochs=1000, verbose=1, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,), class_weight = counts)
     else:
         if use_gen:
-            aug = generator(X,Y,64)
-            model.fit(aug, epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,),)
+            aug = generator(X,Y,200)
+            model.fit(aug, epochs=1000, verbose=1, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,),)
         else:
-            model.fit(X, Y, epochs=1000, verbose=2, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,),)
+            model.fit(X, Y, epochs=1000, verbose=1, callbacks=callbacks_list, validation_data = (X_dev,Y_dev,),)
     model.load_weights(file_path)
     pred_test = model.predict(X_test)
     pred_test = np.argmax(pred_test, axis=-1)
@@ -121,7 +126,7 @@ def get_score(model, file_path, X, Y,  X_dev, Y_dev, X_test, Y_test, counts = No
     with open("Logs/"+file_path.split("/")[1][:-3],"a") as f:
         f.write(f"acc= {acc}; f1 = {f1}\n")
     
-def get_sent_emb(data, model):
+def get_sent_emb(data, model, vector_size = 100):
     sent_embs = []
     for sent in data:
         sent_emb = []
@@ -130,10 +135,13 @@ def get_sent_emb(data, model):
                 sent_emb.append(model.wv[word])
             except:
                 pass
-        sent_emb = np.asarray(sent_emb)
-        sent_emb = np.mean(sent_emb,axis =0)
+        if len(sent_emb)==0:
+            sent_emb = np.zeros(100,) 
+        else:
+            sent_emb = np.asarray(sent_emb)
+            sent_emb = np.mean(sent_emb,axis =0)
         sent_embs.append(sent_emb)
-    return sent_embs
+    return np.asarray(sent_embs)
 
 
 def flat_accuracy(preds, labels):
