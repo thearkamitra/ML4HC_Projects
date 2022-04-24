@@ -49,7 +49,7 @@ if classifier =="keras":
     X_train_tf_idf = convert_sparse_matrix_to_sparse_tensor(X_train_tf_idf)
     X_test_tf_idf = convert_sparse_matrix_to_sparse_tensor(X_test_tf_idf)
     X_dev_tf_idf = convert_sparse_matrix_to_sparse_tensor(X_dev_tf_idf)
-    get_score(model, file_path, X_train_tf_idf, Y_train_num, X_dev_tf_idf, Y_dev_num, X_test_tf_idf, Y_test_num)
+    get_score(model, file_path, X_train_tf_idf, Y_train_num, X_dev_tf_idf, Y_dev_num, X_test_tf_idf, Y_test_num, use_gen=False)
 elif classifier =="bayes":
     naive_bayes_classifier.fit(X_train_tf_idf, Y_train_num)
     y_pred = naive_bayes_classifier.predict(X_test_tf_idf)

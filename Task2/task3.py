@@ -17,7 +17,7 @@ from utils import *
 
 data_train, data_dev, data_test = get_data()
 
-model_name = "bert-large-cased"
+model_name = "emilyalsentzer/Bio_ClinicalBERT"
 
 X_train, Y_train = get_clean_data(data_train, clean_data =False)
 X_dev, Y_dev = get_clean_data(data_dev, clean_data =False)

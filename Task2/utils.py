@@ -173,14 +173,17 @@ def create_dataloader(X_data, Y_data, tokenizer, MAX_LEN=200, batch_size=32, tra
     for sent in X_data:
         encoded_sent = tokenizer.encode(str(sent),add_special_tokens = True,)
         input_ids.append(encoded_sent)
+    print("Tokenized")
     pad_token = tokenizer.pad_token_id
     input_ids = pad_sequences(input_ids, maxlen=MAX_LEN, dtype="long", 
                           value=pad_token, truncating="post", padding="post")
+    print("Padded")
     attention_masks = []
     for sent in input_ids:
         att_mask = [int(token_id != pad_token) for token_id in sent]
         # Store the attention mask for this sentence.
         attention_masks.append(att_mask)
+    print("Generated masks")
     inputs = input_ids
     labels = Y_data
     masks = attention_masks
@@ -195,6 +198,7 @@ def create_dataloader(X_data, Y_data, tokenizer, MAX_LEN=200, batch_size=32, tra
         sampler = SequentialSampler(data)
 
     dataloader = DataLoader(data, sampler= sampler, batch_size = batch_size)
+    print("Created Dataloader")
     return dataloader
 
 
