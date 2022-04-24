@@ -190,13 +190,13 @@ def create_dataloader(X_data, Y_data, tokenizer, MAX_LEN=200, batch_size=32, tra
     inputs = torch.tensor(inputs).to(torch.int64)
     masks = torch.tensor(masks)
     labels = torch.tensor(labels).to(torch.int64)
-
+    print("Converted to tensors")
     data = TensorDataset(inputs, masks, labels)
     if train_data:
         sampler = RandomSampler(data)
     else:
         sampler = SequentialSampler(data)
-
+    print("Converted to data")
     dataloader = DataLoader(data, sampler= sampler, batch_size = batch_size)
     print("Created Dataloader")
     return dataloader
