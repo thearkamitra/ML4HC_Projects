@@ -202,9 +202,9 @@ def create_dataloader(X_data, Y_data, tokenizer, MAX_LEN=200, batch_size=32, tra
     return dataloader
 
 
-def train_bert(model_name, train_dataloader, validation_dataloader, weights):
+def train_bert(model_name, train_dataloader, validation_dataloader, weights, num_labels=5):
         
-    model = AutoModelForSequenceClassification.from_pretrained(model_name, output_attentions = False,output_hidden_states = False)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels= num_labels, output_attentions = False,output_hidden_states = False)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
