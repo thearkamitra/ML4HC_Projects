@@ -9,7 +9,17 @@ from sklearn.naive_bayes import MultinomialNB
 from utils import *
 from model_arch import baseline
 from sklearn import metrics
-classifier = "keras"
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-w","--weights",type = int, choices = [0,1], \
+    help="Whether to consider unbalanced weights or not.", default=1)
+parser.add_argument('-m',"--model", type = str, \
+    choices = ['bayes', 'keras'],\
+        help = "The model to be used.", default="rnn")
+args = parser.parse_args()
+
+classifier = args.model
 if classifier=="keras":
     vectorizer = TfidfVectorizer(max_features = 2000)
 else:
@@ -45,11 +55,15 @@ if classifier =="keras":
     model = baseline(nclass = len(diction), shape = X_train_tf_idf.shape[-1])
     print(X_train_tf_idf.shape)
     print(counts)
-    file_path = "model_weights/task1_weights_keras.h5"
     X_train_tf_idf = convert_sparse_matrix_to_sparse_tensor(X_train_tf_idf)
     X_test_tf_idf = convert_sparse_matrix_to_sparse_tensor(X_test_tf_idf)
     X_dev_tf_idf = convert_sparse_matrix_to_sparse_tensor(X_dev_tf_idf)
-    get_score(model, file_path, X_train_tf_idf, Y_train_num, X_dev_tf_idf, Y_dev_num, X_test_tf_idf, Y_test_num, use_gen=False)
+    if args.weights:
+        file_path = "model_weights/task1_weights_keras_weights.h5"
+        get_score(model, file_path, X_train_tf_idf, Y_train_num, X_dev_tf_idf, Y_dev_num, X_test_tf_idf, Y_test_num, counts= counts, use_gen=False)
+    else:    
+        file_path = "model_weights/task1_weights_keras.h5"
+        get_score(model, file_path, X_train_tf_idf, Y_train_num, X_dev_tf_idf, Y_dev_num, X_test_tf_idf, Y_test_num, use_gen=False)
 elif classifier =="bayes":
     naive_bayes_classifier.fit(X_train_tf_idf, Y_train_num)
     y_pred = naive_bayes_classifier.predict(X_test_tf_idf)

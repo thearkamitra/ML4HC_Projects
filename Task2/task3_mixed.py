@@ -16,6 +16,13 @@ from sklearn import metrics
 from utils import *
 from datasets import load_dataset, load_metric
 from transformers import TrainingArguments, Trainer
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-w","--weights",type = int, choices = [0,1], \
+    help="Whether to consider unbalanced weights or not.", default=1)
+args = parser.parse_args()
 
 diction = {'BACKGROUND': 0, 'CONCLUSIONS': 1, 'METHODS': 2, 'OBJECTIVE': 3, 'RESULTS': 4}
 rev_diction = {0: 'BACKGROUND', 1: 'CONCLUSIONS', 2: 'METHODS', 3: 'OBJECTIVE', 4: 'RESULTS'}
@@ -57,6 +64,9 @@ training_args = TrainingArguments(output_dir="test_trainer", evaluation_strategy
 
 class_weights = [x for a,x in counts.items()]
 
+if args.weights==0:
+    class_weights = [1 for x in class_weights]
+
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
         labels = inputs.get("labels")
@@ -76,10 +86,3 @@ trainer = CustomTrainer(
 
 
 trainer.train()
-
-
-
-
-
-
-

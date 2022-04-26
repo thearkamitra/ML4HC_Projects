@@ -5,6 +5,11 @@ import re
 import numpy as np
 from utils import *
 from model_arch import baseline
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("-w","--weights",type = int, choices = [0,1], \
+    help="Whether to consider unbalanced weights or not.", default=1)
+args = parser.parse_args()
 
 data_train, data_dev, data_test = get_data()
 
@@ -27,5 +32,9 @@ X_dev_vec = get_sent_emb(X_dev, model_word2vec)
 X_test_vec = get_sent_emb(X_test, model_word2vec)
 
 model = baseline(nclass = len(diction), shape = vector_size)
-file_path = "model_weights/task2_weights_keras.h5"
-get_score(model, file_path, X_train_vec, Y_train_num, X_dev_vec, Y_dev_num, X_test_vec, Y_test_num, counts= counts, use_gen=False)
+if args.weight:
+    file_path = "model_weights/task2_weights_keras_weights.h5"
+    get_score(model, file_path, X_train_vec, Y_train_num, X_dev_vec, Y_dev_num, X_test_vec, Y_test_num, counts= counts, use_gen=False)
+else:
+    file_path = "model_weights/task2_weights_keras.h5"
+    get_score(model, file_path, X_train_vec, Y_train_num, X_dev_vec, Y_dev_num, X_test_vec, Y_test_num, use_gen=False)
